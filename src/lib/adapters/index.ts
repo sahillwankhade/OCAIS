@@ -12,10 +12,10 @@ export interface AppAdapters {
   maps: IMapService;
 }
 
-const isMock = process.env.NODE_ENV !== 'production' && process.env.USE_MOCK_SERVICES !== 'false';
+const isMock = process.env.USE_MOCK_SERVICES !== 'false';
 
 export const adapters: AppAdapters = {
-  sms: isMock || !process.env.MSG91_AUTH_KEY ? new MockSmsService() : new Msg91SmsService(),
+  sms: isMock ? new MockSmsService() : new Msg91SmsService(),
   whatsapp: new MockWhatsAppService(),
   push: new MockPushNotificationService(),
   payment: isMock ? new MockPaymentService() : new RazorpayPaymentService(),

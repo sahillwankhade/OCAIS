@@ -40,14 +40,14 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/dashboard"
+            href="/hospital/login"
             className="flex flex-col items-center p-6 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition text-slate-900 hover:border-teal-600"
           >
             <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 mb-3">
               <Stethoscope className="w-7 h-7" />
             </div>
             <span className="font-bold text-lg">Hospital Portal</span>
-            <span className="text-xs text-slate-500 mt-1">Doctor, Reception & Admin</span>
+            <span className="text-xs text-slate-500 mt-1">Hospital ID → Doctor, Reception & Admin</span>
           </Link>
 
           <Link
@@ -72,6 +72,9 @@ export default function HomePage() {
             <span className="text-xs text-slate-500 mt-1">Waiting Room Signage</span>
           </Link>
         </div>
+        <Link href="/admin/login" className="mt-5 text-sm font-bold text-slate-700 hover:text-teal-700">
+          Super-admin login →
+        </Link>
       </div>
 
       <footer className="w-full max-w-4xl flex flex-col sm:flex-row items-center justify-between py-6 border-t border-slate-200 text-xs text-slate-500 gap-2">
@@ -86,4 +89,3 @@ export default function HomePage() {
     </main>
   );
 }
-

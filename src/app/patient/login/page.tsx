@@ -18,6 +18,7 @@ export default function PatientLoginPage() {
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>('MALE');
   const [bloodGroup, setBloodGroup] = useState('B+');
   const [dpdpConsent, setDpdpConsent] = useState(true);
+  const [mockMode, setMockMode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -39,6 +40,7 @@ export default function PatientLoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
+      setMockMode(data.mockMode === true);
       setStep('OTP');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to send OTP');
@@ -159,10 +161,12 @@ export default function PatientLoginPage() {
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-100 text-xs text-slate-600 flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
-              <span>{t.auth.mockOtpHint}</span>
-            </div>
+            {mockMode ? (
+              <div className="p-3 rounded-xl bg-slate-100 text-xs text-slate-600 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+                <span>{t.auth.mockOtpHint}</span>
+              </div>
+            ) : null}
 
             <button
               type="submit"

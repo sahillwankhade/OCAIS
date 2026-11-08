@@ -19,6 +19,7 @@
 - **Security**: HMAC-SHA256 signed QR codes with doctor and date verification
 - **i18n**: English (`en`), Hindi (`hi`), Marathi (`mr`)
 - **Adapters**: Adapter pattern with deterministic local Mock Mode (OTP `123456`, mock Razorpay payment, mock Indian travel matrix)
+- **Patient booking fee**: One Click AIS charges a fixed ₹20 slot-booking fee. Doctor consultation fees are not collected by the app and must be paid to the clinic separately when applicable.
 
 ---
 
@@ -59,7 +60,7 @@ supabase start
 supabase db reset
 ```
 
-The app defaults to mock services, including OTP `123456`, so no provider keys are required for local development.
+The app defaults to mock services, including OTP `123456`, so no provider keys are required for local development. For real SMS OTPs, set `USE_MOCK_SERVICES=false`, configure MSG91, and restart the server. The OTP is then generated and delivered by MSG91; no OTP value is exposed by the app.
 
 ### Production deployment
 
@@ -71,6 +72,16 @@ Mock OTP, mock payment, and fallback QR secrets are development-only. Before dep
 4. Apply migrations with `supabase db push` and load only non-production demo data.
 5. Deploy the Next.js app to Vercel or a Node server with HTTPS enabled.
 6. Confirm patient/staff authentication, RLS policies, payment webhooks, and audit logging in a staging environment before go-live.
+
+### Login areas
+
+- Patient: `/patient/login` with mobile OTP.
+- Hospital: `/hospital/login`; select the hospital first, then sign in as doctor,
+  receptionist, or hospital admin.
+- Super-admin: `/admin/login` with platform-wide access.
+
+Set `HOSPITAL_DEMO_PIN`, `SUPERADMIN_EMAIL`, and `SUPERADMIN_PIN` in production.
+Do not use the development demo credentials in production.
 
 Production startup rejects mock OTP and missing payment/HMAC credentials. Sensitive API routes require authenticated sessions and enforce patient or staff authorization.
 

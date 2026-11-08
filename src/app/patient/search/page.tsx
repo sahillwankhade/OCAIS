@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PatientHeader } from '@/components/patient/PatientHeader';
 import { useI18n } from '@/lib/i18n/context';
+import { APP_BOOKING_FEE_INR } from '@/lib/billing/booking-fee';
 import { Search, MapPin, Stethoscope, Clock } from 'lucide-react';
 import { Doctor, Hospital } from '@/lib/types';
 
@@ -141,9 +142,9 @@ function SearchContent() {
 
                     <div className="text-right">
                       <div className="text-base font-extrabold text-slate-900">
-                        ₹{doc.consultationFee}
+                        ₹{APP_BOOKING_FEE_INR}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-medium">Consultation Fee</div>
+                      <div className="text-[10px] text-slate-400 font-medium">Booking Fee</div>
                     </div>
                   </div>
 

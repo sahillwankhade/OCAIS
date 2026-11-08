@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
 import { adapters } from '@/lib/adapters';
 import { forbiddenIfPatientMismatch } from '@/lib/security/access';
+import { APP_BOOKING_FEE_INR } from '@/lib/billing/booking-fee';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -42,7 +43,6 @@ export async function POST(req: NextRequest) {
       slotDate,
       slotStartTime,
       slotEndTime,
-      paymentMethod = 'ONLINE_MOCK',
       notes,
     } = body;
 
@@ -68,24 +68,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Family member does not belong to patient' }, { status: 403 });
     }
 
-    // Process payment in mock mode
-    const isOnline = paymentMethod === 'ONLINE_MOCK';
-    let paymentStatus: 'PAID' | 'PENDING' = isOnline ? 'PAID' : 'PENDING';
-
-    if (isOnline) {
-      const order = await adapters.payment.createOrder({
-        appointmentId: 'temp',
-        amountInInr: doctor.consultationFee,
-        patientPhone: patient.phone,
-      });
-      const verified = await adapters.payment.verifyPayment({
-        orderId: order.orderId,
-        paymentId: `pay_mock_${Date.now()}`,
-        signature: 'mock_signature_valid',
-      });
-      if (!verified) {
-        paymentStatus = 'PENDING';
-      }
+    const order = await adapters.payment.createOrder({
+      appointmentId: 'temp',
+      amountInInr: APP_BOOKING_FEE_INR,
+      patientPhone: patient.phone,
+    });
+    const verified = await adapters.payment.verifyPayment({
+      orderId: order.orderId,
+      paymentId: `pay_mock_${Date.now()}`,
+      signature: 'mock_signature_valid',
+    });
+    if (!verified) {
+      return NextResponse.json({ error: 'Booking fee payment could not be verified' }, { status: 402 });
     }
 
     const appointment = mockDb.createAppointment({
@@ -98,9 +92,9 @@ export async function POST(req: NextRequest) {
       slotEndTime: slotEndTime || slotStartTime,
       state: 'BOOKED',
       isWalkIn: false,
-      paymentStatus,
-      paymentMethod,
-      amountPaid: doctor.consultationFee,
+      paymentStatus: 'PAID',
+      paymentMethod: 'ONLINE_MOCK',
+      amountPaid: APP_BOOKING_FEE_INR,
       notes: notes || undefined,
     });
 

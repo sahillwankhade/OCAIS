@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PatientHeader } from '@/components/patient/PatientHeader';
 import { useI18n } from '@/lib/i18n/context';
+import { APP_BOOKING_FEE_INR } from '@/lib/billing/booking-fee';
 import { Calendar, Clock, MapPin, ChevronRight, Stethoscope, ArrowUpRight, Activity } from 'lucide-react';
 import { Hospital, Doctor, Appointment } from '@/lib/types';
 import { getStatusBadgeInfo } from '@/lib/state-machine/appointment-state';
@@ -191,7 +192,7 @@ export default function PatientHomePage() {
                         <div>
                           <div className="text-sm font-bold text-slate-900">{doc.fullName}</div>
                           <div className="text-xs text-slate-600">
-                            {doc.specialization} • ₹{doc.consultationFee}
+                            {doc.specialization} • ₹{APP_BOOKING_FEE_INR} booking fee
                           </div>
                         </div>
 
@@ -212,4 +213,3 @@ export default function PatientHomePage() {
     </>
   );
 }
-

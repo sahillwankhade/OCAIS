@@ -37,7 +37,7 @@ export function useDashboardRole() {
 
 export function DashboardHeader() {
   const pathname = usePathname();
-  const { role, setRole, hospitalId, setHospitalId } = useDashboardRole();
+  const { role, hospitalId } = useDashboardRole();
 
   const navLinks = [
     { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -69,41 +69,17 @@ export function DashboardHeader() {
             </div>
           </Link>
 
-          {/* Hospital Selector */}
           <div className="hidden sm:flex items-center gap-1.5 ml-4 pl-4 border-l border-slate-200">
             <Hospital className="w-4 h-4 text-slate-400" />
-            <select
-              value={hospitalId}
-              onChange={(e) => setHospitalId(e.target.value)}
-              className="text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none cursor-pointer"
-            >
-              <option value="hosp-sahyadri">Sahyadri Care Hospital (Pune)</option>
-              <option value="hosp-arogya">Arogya Clinic (Mumbai)</option>
-            </select>
+            <span className="text-xs font-bold text-slate-800">
+              {hospitalId === 'hosp-arogya' ? 'Arogya Clinic (Mumbai)' : 'Sahyadri Care Hospital (Pune)'}
+            </span>
           </div>
         </div>
 
-        {/* Demo Role Switcher */}
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-slate-500 hidden sm:inline">Role:</span>
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl">
-            {(['doctor', 'receptionist', 'admin'] as UserRole[]).map((r) => {
-              const isSelected = role === r;
-              return (
-                <button
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={`text-xs font-bold px-2.5 py-1 rounded-lg capitalize transition ${
-                    isSelected
-                      ? 'bg-teal-700 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {r}
-                </button>
-              );
-            })}
-          </div>
+          <span className="text-xs font-bold text-teal-800 capitalize">{role}</span>
 
           <Link
             href="/patient"

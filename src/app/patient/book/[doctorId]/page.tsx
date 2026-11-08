@@ -6,7 +6,8 @@ import { PatientHeader } from '@/components/patient/PatientHeader';
 import { useI18n } from '@/lib/i18n/context';
 import { Doctor, Hospital, Patient, FamilyMember } from '@/lib/types';
 import { TimeSlot } from '@/lib/slots/slot-generator';
-import { Calendar, Clock, User, CreditCard, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { APP_BOOKING_FEE_INR } from '@/lib/billing/booking-fee';
 
 export default function BookDoctorPage() {
   const params = useParams();
@@ -24,7 +25,6 @@ export default function BookDoctorPage() {
   );
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'ONLINE_MOCK' | 'CASH'>('ONLINE_MOCK');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -103,7 +103,6 @@ export default function BookDoctorPage() {
           slotDate: selectedDate,
           slotStartTime: selectedSlot.startTime,
           slotEndTime: selectedSlot.endTime,
-          paymentMethod,
           notes,
         }),
       });
@@ -148,9 +147,9 @@ export default function BookDoctorPage() {
             </div>
             <div className="text-right">
               <span className="text-base font-extrabold text-teal-950">
-                ₹{doctor.consultationFee}
+                ₹{APP_BOOKING_FEE_INR}
               </span>
-              <span className="text-[10px] block text-teal-700">Per visit</span>
+              <span className="text-[10px] block text-teal-700">Booking fee</span>
             </div>
           </div>
         )}
@@ -285,43 +284,19 @@ export default function BookDoctorPage() {
             </div>
           </section>
 
-          {/* Payment Method */}
+          {/* One Click AIS booking fee */}
           <section>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              4. Payment Method
+              4. Booking Fee
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('ONLINE_MOCK')}
-                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition ${
-                  paymentMethod === 'ONLINE_MOCK'
-                    ? 'border-teal-700 bg-teal-50/70 text-teal-950 font-bold'
-                    : 'border-slate-200 bg-white text-slate-700 font-medium'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 text-xs">
-                  <CreditCard className="w-4 h-4 text-teal-700" />
-                  <span>UPI / Card (Mock)</span>
-                </div>
-                <span className="text-[11px] text-teal-700 font-normal">Instant token</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('CASH')}
-                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition ${
-                  paymentMethod === 'CASH'
-                    ? 'border-teal-700 bg-teal-50/70 text-teal-950 font-bold'
-                    : 'border-slate-200 bg-white text-slate-700 font-medium'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 text-xs">
-                  <User className="w-4 h-4 text-slate-600" />
-                  <span>Pay at Clinic</span>
-                </div>
-                <span className="text-[11px] text-slate-500 font-normal">Cash at reception</span>
-              </button>
+            <div className="p-3 rounded-xl border border-teal-200 bg-teal-50/70 text-sm text-teal-950">
+              <div className="flex items-center justify-between font-bold">
+                <span>One Click AIS slot booking fee</span>
+                <span>₹{APP_BOOKING_FEE_INR}</span>
+              </div>
+              <p className="text-xs text-teal-800 mt-1">
+                The doctor&apos;s consultation fee is not collected by this app. Pay the clinic separately if required.
+              </p>
             </div>
           </section>
 
@@ -340,7 +315,7 @@ export default function BookDoctorPage() {
               ) : (
                 <>
                   <span>
-                    Confirm & Book for ₹{doctor?.consultationFee || 500}
+                    Confirm & Book for ₹{APP_BOOKING_FEE_INR}
                   </span>
                 </>
               )}
@@ -351,4 +326,3 @@ export default function BookDoctorPage() {
     </>
   );
 }
-
