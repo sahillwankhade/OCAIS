@@ -1,0 +1,19 @@
+name: Supabase migrations
+
+on:
+  pull_request:
+    paths:
+      - supabase/migrations/**
+      - supabase/seed.sql
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - run: supabase db reset --local
+      - run: supabase stop

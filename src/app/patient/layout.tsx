@@ -1,6 +1,11 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { I18nProvider } from '@/lib/i18n/context';
 import { PatientBottomNav } from '@/components/patient/PatientBottomNav';
+
+export const metadata: Metadata = {
+  manifest: '/patient-manifest.json',
+};
 
 export default function PatientLayout({
   children,
@@ -18,4 +23,3 @@ export default function PatientLayout({
     </I18nProvider>
   );
 }
-

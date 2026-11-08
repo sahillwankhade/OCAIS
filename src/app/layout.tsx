@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 
 export const metadata: Metadata = {
   title: 'One Click AIS | Instant Healthcare Appointments & Live Queue Tracker',
@@ -24,9 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans">
+        <ServiceWorkerRegistration />
         {children}
       </body>
     </html>
   );
 }
-

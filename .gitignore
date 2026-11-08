@@ -4,6 +4,8 @@ node_modules/
 # Next.js
 .next/
 out/
+dist/
+.vercel/
 
 # Test and coverage output
 coverage/
@@ -19,6 +21,8 @@ blob-report/
 
 # Local Supabase state
 .supabase/
+supabase/.branches/
+supabase/.temp/
 
 # TypeScript build metadata
 *.tsbuildinfo
