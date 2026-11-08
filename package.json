@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:production": "cross-env E2E_PRODUCTION=true E2E_TEST_MODE=true USE_MOCK_SERVICES=true playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.48.1",
@@ -33,6 +34,7 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^10.1.0",
     "eslint": "^9.20.0",
     "eslint-config-next": "^15.1.7",
     "postcss": "^8.5.2",

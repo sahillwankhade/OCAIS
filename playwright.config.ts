@@ -23,7 +23,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx next dev -p 3000',
+    command: process.env.E2E_PRODUCTION === 'true' ? 'npx next start -p 3000' : 'npx next dev -p 3000',
     url: 'http://localhost:3000',
     reuseExistingServer: true,
     timeout: 120000,

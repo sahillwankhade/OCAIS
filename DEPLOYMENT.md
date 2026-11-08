@@ -102,3 +102,8 @@ npm run test:e2e
 ```
 
 Run builds and Playwright sequentially because both use `.next`.
+
+For a local production smoke test, install `cross-env` or set the variables in
+your shell, then run `npm run start` in one terminal and
+`npm run test:e2e:production` in another. This uses explicit test-mode mock
+providers while still exercising the production session and route guards.

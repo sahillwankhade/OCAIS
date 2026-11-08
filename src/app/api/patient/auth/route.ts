@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'SEND_OTP') {
-      if (process.env.NODE_ENV === 'production' && process.env.USE_MOCK_SERVICES !== 'false') {
+      if (process.env.NODE_ENV === 'production' && process.env.USE_MOCK_SERVICES !== 'false' && process.env.E2E_TEST_MODE !== 'true') {
         return NextResponse.json({ error: 'Real OTP provider is required in production.' }, { status: 503 });
       }
       const result = await adapters.sms.sendOtp(phone);

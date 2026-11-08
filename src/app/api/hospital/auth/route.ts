@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
 import { createSessionCookie, SESSION_COOKIE } from '@/lib/security/access';
 
-const configuredPin = process.env.HOSPITAL_DEMO_PIN || (process.env.NODE_ENV === 'production' ? '' : '123456');
+const configuredPin = process.env.HOSPITAL_DEMO_PIN
+  || (process.env.NODE_ENV !== 'production' || process.env.E2E_TEST_MODE === 'true' ? '123456' : '');
 
 export async function POST(req: NextRequest) {
   try {
