@@ -116,8 +116,7 @@ export default function SettingsAndAuditPage() {
     setTimeout(() => setSaveMessage(''), 3000);
   };
 
-  const handleAddDoctor = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddDoctor = async () => {
     const res = await fetch('/api/doctors', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -199,13 +198,13 @@ export default function SettingsAndAuditPage() {
                 </div>
                 {doctorMessage ? <div className="p-3 bg-teal-50 rounded-xl text-xs text-teal-800">{doctorMessage}</div> : null}
                 {showDoctorForm ? (
-                  <form onSubmit={handleAddDoctor} className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl">
                     <input required value={doctorName} onChange={(e) => setDoctorName(e.target.value)} placeholder="Doctor full name" className="p-2.5 border rounded-xl text-sm" />
                     <input required value={doctorCabin} onChange={(e) => setDoctorCabin(e.target.value)} placeholder="Cabin number" className="p-2.5 border rounded-xl text-sm" />
                     <input required value={doctorSpecialization} onChange={(e) => setDoctorSpecialization(e.target.value)} placeholder="Specialization" className="p-2.5 border rounded-xl text-sm" />
                     <input required type="number" value={doctorFee} onChange={(e) => setDoctorFee(e.target.value)} placeholder="Consultation fee" className="p-2.5 border rounded-xl text-sm" />
-                    <button type="submit" className="sm:col-span-2 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold">Save Doctor</button>
-                  </form>
+                    <button type="button" onClick={handleAddDoctor} className="sm:col-span-2 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold">Save Doctor</button>
+                  </div>
                 ) : null}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {doctors.map((doctor) => (

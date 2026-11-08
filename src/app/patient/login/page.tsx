@@ -11,8 +11,8 @@ export default function PatientLoginPage() {
   const { t } = useI18n();
 
   const [step, setStep] = useState<'PHONE' | 'OTP' | 'PROFILE'>('PHONE');
-  const [phone, setPhone] = useState('9820011111'); // Pre-filled with demo patient 1
-  const [otp, setOtp] = useState('123456'); // Pre-filled with mock OTP
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
   const [fullName, setFullName] = useState('');
   const [age, setAge] = useState('30');
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>('MALE');
@@ -23,7 +23,7 @@ export default function PatientLoginPage() {
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length < 10) {
+    if (phone.length !== 10) {
       setError('Please enter a valid 10-digit mobile number');
       return;
     }
@@ -49,7 +49,7 @@ export default function PatientLoginPage() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp) {
+    if (otp.length !== 6) {
       setError('Please enter the 6-digit OTP');
       return;
     }
@@ -291,4 +291,3 @@ export default function PatientLoginPage() {
     </>
   );
 }
-

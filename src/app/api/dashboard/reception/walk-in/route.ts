@@ -60,21 +60,37 @@ export async function POST(req: NextRequest) {
       notes: notes || 'Walk-in booking registered at reception desk',
     });
 
-    // Send WhatsApp token notification
-    await adapters.whatsapp.sendTokenMessage({
+    const tokenMessage = {
       phone: patient.phone,
       patientName: patient.fullName,
       doctorName: doctor.fullName,
       tokenNumber: appointment.tokenNumber,
       slotTime: `Today at ${appointment.slotStartTime}`,
       qrUrl: `http://localhost:3000/patient/queue/${appointment.id}`,
-    });
+    };
+    const [whatsappResult, smsResult, pushResult] = await Promise.all([
+      adapters.whatsapp.sendTokenMessage(tokenMessage),
+      adapters.sms.sendSms(
+        patient.phone,
+        `Your One Click AIS walk-in token is #${appointment.tokenNumber} for ${doctor.fullName}.`
+      ),
+      adapters.push.sendToUser(patient.id, {
+        title: 'Walk-in token generated',
+        body: `Your token is #${appointment.tokenNumber} for ${doctor.fullName}.`,
+        url: `/patient/queue/${appointment.id}`,
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
       message: `Walk-in token #${appointment.tokenNumber} generated successfully.`,
       appointment,
       patient,
+      notifications: {
+        whatsapp: whatsappResult.success,
+        sms: smsResult.success,
+        push: pushResult.success,
+      },
       slipData: {
         tokenNumber: appointment.tokenNumber,
         hospitalName: 'Sahyadri Care Hospital',
@@ -91,4 +107,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

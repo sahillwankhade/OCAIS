@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
+import { forbiddenIfPatientMismatch } from '@/lib/security/access';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const phone = searchParams.get('phone');
   const patientId = searchParams.get('patientId') || 'pat-1'; // Default to demo patient 1
+  const accessError = forbiddenIfPatientMismatch(req, patientId);
+  if (accessError) return accessError;
 
   let patient = phone ? mockDb.getPatientByPhone(phone) : mockDb.getPatientById(patientId);
 
@@ -34,6 +37,8 @@ export async function POST(req: NextRequest) {
       if (!patientId || !fullName || !relationship) {
         return NextResponse.json({ error: 'Missing required family details' }, { status: 400 });
       }
+      const accessError = forbiddenIfPatientMismatch(req, patientId);
+      if (accessError) return accessError;
 
       const familyMember = mockDb.createFamilyMember({
         primaryPatientId: patientId,
@@ -52,4 +57,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
 import { adapters } from '@/lib/adapters';
+import { forbiddenIfPatientMismatch } from '@/lib/security/access';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const patientId = searchParams.get('patientId') || 'pat-1';
+  const accessError = forbiddenIfPatientMismatch(req, patientId);
+  if (accessError) return accessError;
   const doctorId = searchParams.get('doctorId');
   const slotDate = searchParams.get('date');
 
@@ -55,6 +58,14 @@ export async function POST(req: NextRequest) {
     const patient = mockDb.getPatientById(patientId);
     if (!patient) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 });
+    }
+    const accessError = forbiddenIfPatientMismatch(req, patientId);
+    if (accessError) return accessError;
+    if (mockDb.getDoctorById(doctorId)?.hospitalId !== hospitalId) {
+      return NextResponse.json({ error: 'Doctor and hospital do not match' }, { status: 400 });
+    }
+    if (familyMemberId && !mockDb.getFamilyMembers(patientId).some((member) => member.id === familyMemberId)) {
+      return NextResponse.json({ error: 'Family member does not belong to patient' }, { status: 403 });
     }
 
     // Process payment in mock mode
@@ -112,4 +123,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

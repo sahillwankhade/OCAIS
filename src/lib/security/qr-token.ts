@@ -1,7 +1,9 @@
 import crypto from 'crypto';
 import { QRPayload } from '../types';
 
-const DEFAULT_SECRET = process.env.HMAC_SECRET_KEY || 'dev-secret-key-change-in-production-ocais-2026';
+const DEFAULT_SECRET = process.env.HMAC_SECRET_KEY || (
+  process.env.NODE_ENV === 'production' ? '' : 'dev-secret-key-change-in-production-ocais-2026'
+);
 
 export interface GenerateQRParams {
   appointmentId: string;
@@ -43,6 +45,7 @@ export function generateQRPayload({
   expiresInHours = 18,
   secretKey = DEFAULT_SECRET,
 }: GenerateQRParams): QRPayload {
+  if (!secretKey) throw new Error('HMAC_SECRET_KEY is required in production.');
   // Expiry defaults to end of slot day
   const expiryDate = new Date();
   expiryDate.setHours(expiryDate.getHours() + expiresInHours);
@@ -80,6 +83,9 @@ export function verifyQRPayload(
   expectedDate?: string, // YYYY-MM-DD
   secretKey = DEFAULT_SECRET
 ): VerificationResult {
+  if (!secretKey) {
+    return { isValid: false, code: 'INVALID_SIGNATURE', error: 'QR signing is not configured.' };
+  }
   let payload: QRPayload;
 
   try {
@@ -175,4 +181,3 @@ export function verifyQRPayload(
     payload,
   };
 }
-

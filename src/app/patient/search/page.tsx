@@ -113,7 +113,11 @@ function SearchContent() {
               <div className="text-xs text-slate-500 mt-1">Try clearing search filters or search another specialty</div>
             </div>
           ) : (
-            filteredDoctors.map((doc) => {
+            [...filteredDoctors].sort((a, b) => {
+              const aSponsored = hospitals.find((h) => h.id === a.hospitalId)?.isSponsored ? 1 : 0;
+              const bSponsored = hospitals.find((h) => h.id === b.hospitalId)?.isSponsored ? 1 : 0;
+              return bSponsored - aSponsored;
+            }).map((doc) => {
               const hosp = hospitals.find((h) => h.id === doc.hospitalId);
               return (
                 <div
@@ -122,9 +126,10 @@ function SearchContent() {
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-base font-bold text-slate-900 leading-tight">
-                        {doc.fullName}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-bold text-slate-900 leading-tight">{doc.fullName}</h3>
+                        {hosp?.isSponsored ? <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">Sponsored</span> : null}
+                      </div>
                       <div className="text-xs font-semibold text-teal-700 mt-0.5">
                         {doc.specialization} • {doc.experienceYears}+ years exp
                       </div>

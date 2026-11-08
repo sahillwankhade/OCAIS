@@ -18,7 +18,7 @@
 - **Backend / Database**: Supabase (Postgres, Row Level Security, Realtime channels)
 - **Security**: HMAC-SHA256 signed QR codes with doctor and date verification
 - **i18n**: English (`en`), Hindi (`hi`), Marathi (`mr`)
-- **Adapters**: Adapter pattern with full deterministic Mock Mode (OTP `123456`, mock Razorpay payment, mock Indian travel matrix)
+- **Adapters**: Adapter pattern with deterministic local Mock Mode (OTP `123456`, mock Razorpay payment, mock Indian travel matrix)
 
 ---
 
@@ -60,6 +60,25 @@ supabase db reset
 ```
 
 The app defaults to mock services, including OTP `123456`, so no provider keys are required for local development.
+
+### Production deployment
+
+Mock OTP, mock payment, and fallback QR secrets are development-only. Before deploying:
+
+1. Set `NODE_ENV=production` and `USE_MOCK_SERVICES=false`.
+2. Configure a cryptographically random `HMAC_SECRET_KEY`.
+3. Configure Supabase URL, anon key, service role key, and real provider credentials (`MSG91_*`, Razorpay, Google Maps).
+4. Apply migrations with `supabase db push` and load only non-production demo data.
+5. Deploy the Next.js app to Vercel or a Node server with HTTPS enabled.
+6. Confirm patient/staff authentication, RLS policies, payment webhooks, and audit logging in a staging environment before go-live.
+
+Production startup rejects mock OTP and missing payment/HMAC credentials. Sensitive API routes require authenticated sessions and enforce patient or staff authorization.
+
+## Release hardening
+
+- **Performance**: queue endpoints use `Cache-Control: no-store`; live screens poll only while mounted, and production builds are verified with `npm run build`.
+- **Accessibility**: semantic headings, labels, keyboard-accessible controls, visible focus states, high contrast colors, and minimum 44–48px touch targets are used throughout the implemented screens.
+- **Security**: QR payloads use HMAC-SHA256, production secrets are mandatory, mock payment is disabled in production, and API authorization is enforced server-side.
 
 ---
 

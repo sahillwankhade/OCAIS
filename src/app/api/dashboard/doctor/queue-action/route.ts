@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
-import { adapters } from '@/lib/adapters';
+import { sendDelayAlerts } from '@/lib/notifications/service';
+import { requireSession } from '@/lib/security/access';
 
 export async function POST(req: NextRequest) {
   try {
+    const session = requireSession(req, ['doctor', 'receptionist', 'admin']);
+    if (session instanceof NextResponse) return session;
     const body = await req.json();
     const { action, doctorId, delayMinutes, prescription, notes } = body;
 
@@ -14,6 +17,9 @@ export async function POST(req: NextRequest) {
     const doctor = mockDb.getDoctorById(doctorId);
     if (!doctor) {
       return NextResponse.json({ error: 'Doctor not found' }, { status: 404 });
+    }
+    if (session.role === 'doctor' && session.subjectId !== doctorId) {
+      return NextResponse.json({ error: 'Doctor access denied' }, { status: 403 });
     }
 
     const today = new Date().toISOString().split('T')[0];
@@ -115,17 +121,16 @@ export async function POST(req: NextRequest) {
         (a) => a.state === 'CHECKED_IN' || a.state === 'BOOKED'
       );
 
-      for (const w of waiting) {
-        const pat = mockDb.getPatientById(w.patientId);
-        if (pat) {
-          adapters.whatsapp.sendDelayAlert(pat.phone, doctor.fullName, mins);
-        }
-      }
+      const patients = waiting
+        .map((appointment) => mockDb.getPatientById(appointment.patientId))
+        .filter((patient): patient is NonNullable<typeof patient> => Boolean(patient));
+      const notificationResult = await sendDelayAlerts(doctor, patients, mins);
 
       return NextResponse.json({
         success: true,
         delayMinutes: mins,
         notifiedCount: waiting.length,
+        deliveryCount: notificationResult.successCount,
         message: `Delay of ${mins} minutes reported and sent to ${waiting.length} waiting patients.`,
       });
     }
@@ -155,4 +160,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

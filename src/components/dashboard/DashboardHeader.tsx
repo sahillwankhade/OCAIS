@@ -46,6 +46,7 @@ export function DashboardHeader() {
     { href: '/dashboard/calendar', label: 'Calendar & Slots', icon: Calendar },
     { href: '/dashboard/patients', label: 'Patient Directory', icon: Users },
     { href: '/dashboard/reports', label: 'Reports & Analytics', icon: BarChart3 },
+    { href: '/dashboard/staff', label: 'Staff & Forms', icon: Users },
     { href: '/dashboard/settings', label: 'Settings & Audit', icon: Settings },
   ];
 
@@ -137,4 +138,3 @@ export function DashboardHeader() {
     </header>
   );
 }
-

@@ -29,6 +29,8 @@ export class MockPaymentService implements IPaymentService {
   private keySecret = process.env.RAZORPAY_KEY_SECRET || 'rzp_mock_secret_key';
 
   async createOrder({ appointmentId, amountInInr }: CreateOrderParams): Promise<OrderResult> {
+    if (!this.keyId || !this.keySecret) throw new Error('Razorpay credentials are required.');
+    if (!this.keyId || !this.keySecret) throw new Error('Razorpay credentials are required.');
     return {
       orderId: `order_mock_${Date.now()}_${appointmentId.slice(0, 6)}`,
       amount: amountInInr * 100, // paise
@@ -38,6 +40,8 @@ export class MockPaymentService implements IPaymentService {
   }
 
   async verifyPayment({ orderId, paymentId, signature }: VerifyPaymentParams): Promise<boolean> {
+    if (!this.keySecret) throw new Error('Razorpay credentials are required.');
+    if (!this.keySecret) throw new Error('Razorpay credentials are required.');
     // In mock mode, if signature is "mock_signature_valid", or if it matches computed HMAC, return true
     if (signature === 'mock_signature_valid') {
       return true;
@@ -72,4 +76,3 @@ export class RazorpayPaymentService implements IPaymentService {
     return expected === signature;
   }
 }
-

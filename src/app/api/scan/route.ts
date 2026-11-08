@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
+import { requireSession } from '@/lib/security/access';
 
 export async function POST(req: NextRequest) {
   try {
+    const session = requireSession(req, ['doctor', 'receptionist', 'admin']);
+    if (session instanceof NextResponse) return session;
     const body = await req.json();
     const { qrPayload, doctorId } = body;
 
@@ -26,4 +29,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

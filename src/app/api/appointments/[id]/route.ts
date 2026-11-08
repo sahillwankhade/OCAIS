@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
 import { AppointmentState } from '@/lib/types';
+import { forbiddenIfPatientMismatch, requireSession } from '@/lib/security/access';
 
 export async function GET(
   req: NextRequest,
@@ -12,6 +13,8 @@ export async function GET(
   if (!apt) {
     return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
   }
+  const accessError = forbiddenIfPatientMismatch(req, apt.patientId);
+  if (accessError) return accessError;
 
   const doctor = mockDb.getDoctorById(apt.doctorId);
   const hospital = mockDb.getHospitalById(apt.hospitalId);
@@ -35,6 +38,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
+    const session = requireSession(req, ['patient', 'doctor', 'receptionist', 'admin']);
+    if (session instanceof NextResponse) return session;
     const body = await req.json();
     const { nextState, notes, userId, role } = body as {
       nextState: AppointmentState;
@@ -42,6 +47,11 @@ export async function PATCH(
       userId?: string;
       role?: string;
     };
+    const apt = mockDb.getAppointmentById(id);
+    if (!apt) return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
+    if (session.role === 'patient' && session.subjectId !== apt.patientId) {
+      return NextResponse.json({ error: 'Patient access denied' }, { status: 403 });
+    }
 
     if (body.action === 'RESCHEDULE') {
       if (!body.slotDate || !body.slotStartTime || !body.slotEndTime) {

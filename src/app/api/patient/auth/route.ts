@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
 import { adapters } from '@/lib/adapters';
+import { createSessionCookie, SESSION_COOKIE } from '@/lib/security/access';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,11 +13,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'SEND_OTP') {
+      if (process.env.NODE_ENV === 'production' && process.env.USE_MOCK_SERVICES !== 'false') {
+        return NextResponse.json({ error: 'Real OTP provider is required in production.' }, { status: 503 });
+      }
       const result = await adapters.sms.sendOtp(phone);
       return NextResponse.json({
         success: true,
         message: 'OTP sent successfully',
-        mockOtp: result.mockOtp, // Sent in mock mode for instant developer convenience
+        ...(process.env.NODE_ENV !== 'production' && result.mockOtp ? { mockOtp: result.mockOtp } : {}),
       });
     }
 
@@ -40,11 +44,19 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         isNewUser,
         patient,
       });
+      if (patient) {
+        response.cookies.set(SESSION_COOKIE, createSessionCookie({
+          subjectId: patient.id,
+          role: 'patient',
+          expiresAt: Date.now() + 8 * 60 * 60 * 1000,
+        }), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/' });
+      }
+      return response;
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -53,4 +65,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

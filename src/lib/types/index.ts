@@ -29,6 +29,27 @@ export interface Hospital {
   closingTime: string; // e.g. "20:00"
   departments: string[];
   createdAt: string;
+  isSponsored?: boolean;
+  sponsorLabel?: string;
+}
+
+export interface StaffMember {
+  id: string;
+  hospitalId: string;
+  fullName: string;
+  role: 'doctor' | 'receptionist' | 'admin';
+  phone: string;
+  presentToday: boolean;
+  lastAttendanceAt?: string;
+}
+
+export interface DigitalForm {
+  id: string;
+  hospitalId: string;
+  name: string;
+  description: string;
+  required: boolean;
+  active: boolean;
 }
 
 export interface Doctor {
@@ -126,4 +147,3 @@ export interface QueueEstimate {
   doctorStatus: 'ACTIVE' | 'DELAYED' | 'PAUSED' | 'OFFLINE';
   delayMinutes: number;
 }
-

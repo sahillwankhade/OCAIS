@@ -6,6 +6,8 @@ import {
   Appointment,
   AppointmentState,
   QueueEstimate,
+  StaffMember,
+  DigitalForm,
 } from '../types';
 import { assertValidTransition } from '../state-machine/appointment-state';
 import { verifyQRPayload, generateQRPayload } from '../security/qr-token';
@@ -34,6 +36,8 @@ class InMemoryDatabase {
   private schedules: Map<string, DoctorSchedule> = new Map();
   private holidays: Map<string, string[]> = new Map();
   private auditLogs: AuditLogEntry[] = [];
+  private staff: Map<string, StaffMember> = new Map();
+  private forms: Map<string, DigitalForm> = new Map();
 
   constructor() {
     this.seedInitialData();
@@ -48,6 +52,8 @@ class InMemoryDatabase {
     this.schedules.clear();
     this.holidays.clear();
     this.auditLogs = [];
+    this.staff.clear();
+    this.forms.clear();
     this.seedInitialData();
   }
 
@@ -68,6 +74,8 @@ class InMemoryDatabase {
       closingTime: '20:00',
       departments: ['General Medicine', 'Pediatrics', 'Orthopedics', 'Cardiology', 'ENT'],
       createdAt: new Date().toISOString(),
+      isSponsored: true,
+      sponsorLabel: 'Sponsored partner',
     };
     const hosp2: Hospital = {
       id: 'hosp-arogya',
@@ -82,6 +90,7 @@ class InMemoryDatabase {
       closingTime: '21:00',
       departments: ['General Medicine', 'Cardiology', 'Dermatology', 'Gynecology'],
       createdAt: new Date().toISOString(),
+      isSponsored: false,
     };
     this.hospitals.set(hosp1.id, hosp1);
     this.hospitals.set(hosp2.id, hosp2);
@@ -466,6 +475,29 @@ class InMemoryDatabase {
       apt.qrPayload = JSON.stringify(qrPayloadObj);
       this.appointments.set(apt.id, apt);
     }
+
+    this.staff.set('staff-admin-1', {
+      id: 'staff-admin-1', hospitalId: 'hosp-sahyadri', fullName: 'Meera Joshi',
+      role: 'admin', phone: '9820099999', presentToday: true, lastAttendanceAt: new Date().toISOString(),
+    });
+    this.staff.set('staff-reception-1', {
+      id: 'staff-reception-1', hospitalId: 'hosp-sahyadri', fullName: 'Kiran Pawar',
+      role: 'receptionist', phone: '9820088888', presentToday: false,
+    });
+    for (const doctor of this.getDoctors('hosp-sahyadri')) {
+      this.staff.set(`staff-${doctor.id}`, {
+        id: `staff-${doctor.id}`, hospitalId: doctor.hospitalId, fullName: doctor.fullName,
+        role: 'doctor', phone: '', presentToday: doctor.isAvailable,
+      });
+    }
+    this.forms.set('form-consent', {
+      id: 'form-consent', hospitalId: 'hosp-sahyadri', name: 'OPD Consent',
+      description: 'Consent for consultation and digital records.', required: true, active: true,
+    });
+    this.forms.set('form-history', {
+      id: 'form-history', hospitalId: 'hosp-sahyadri', name: 'Medical History',
+      description: 'Symptoms, medications, allergies and prior conditions.', required: false, active: true,
+    });
   }
 
   // Hospital queries
@@ -475,6 +507,22 @@ class InMemoryDatabase {
 
   getHospitalById(id: string): Hospital | undefined {
     return this.hospitals.get(id);
+  }
+
+  getStaff(hospitalId: string): StaffMember[] {
+    return [...this.staff.values()].filter((member) => member.hospitalId === hospitalId);
+  }
+
+  toggleStaffAttendance(id: string): StaffMember | undefined {
+    const member = this.staff.get(id);
+    if (!member) return undefined;
+    const updated = { ...member, presentToday: !member.presentToday, lastAttendanceAt: new Date().toISOString() };
+    this.staff.set(id, updated);
+    return updated;
+  }
+
+  getDigitalForms(hospitalId: string): DigitalForm[] {
+    return [...this.forms.values()].filter((form) => form.hospitalId === hospitalId);
   }
 
   // Doctor queries

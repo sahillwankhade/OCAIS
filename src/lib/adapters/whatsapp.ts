@@ -14,6 +14,11 @@ export interface IWhatsAppService {
     doctorName: string,
     delayMinutes: number
   ): Promise<{ success: boolean; messageId: string }>;
+  sendFollowUpReminder(
+    phone: string,
+    doctorName: string,
+    appointmentId: string
+  ): Promise<{ success: boolean; messageId: string }>;
 }
 
 export class MockWhatsAppService implements IWhatsAppService {
@@ -49,8 +54,24 @@ export class MockWhatsAppService implements IWhatsAppService {
     };
   }
 
+  async sendFollowUpReminder(
+    phone: string,
+    doctorName: string,
+    appointmentId: string
+  ): Promise<{ success: boolean; messageId: string }> {
+    this.sentMessages.push({
+      phone,
+      type: 'FOLLOW_UP_REMINDER',
+      payload: { doctorName, appointmentId },
+      sentAt: new Date(),
+    });
+    return {
+      success: true,
+      messageId: `mock-wa-followup-${Date.now()}`,
+    };
+  }
+
   getRecentLogs() {
     return [...this.sentMessages];
   }
 }
-

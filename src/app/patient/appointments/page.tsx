@@ -19,6 +19,8 @@ export default function MyAppointmentsPage() {
   const [rescheduleSlots, setRescheduleSlots] = useState<import('@/lib/slots/slot-generator').TimeSlot[]>([]);
   const [rescheduleDate, setRescheduleDate] = useState(new Date().toISOString().split('T')[0]);
   const [rescheduleMessage, setRescheduleMessage] = useState('');
+  const [reminderId, setReminderId] = useState<string | null>(null);
+  const [reminderMessage, setReminderMessage] = useState('');
 
   const fetchAppointments = async () => {
     try {
@@ -76,6 +78,24 @@ export default function MyAppointmentsPage() {
     setRescheduleMessage(res.ok ? 'Appointment rescheduled successfully.' : data.error || 'Unable to reschedule.');
     setReschedulingId(null);
     if (res.ok) fetchAppointments();
+  };
+
+  const handleFollowUpReminder = async (appointmentId: string) => {
+    setReminderId(appointmentId);
+    setReminderMessage('');
+    try {
+      const res = await fetch('/api/notifications/follow-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointmentId }),
+      });
+      const data = await res.json();
+      setReminderMessage(res.ok ? 'Follow-up reminder sent by SMS, WhatsApp and push.' : data.error);
+    } catch (error) {
+      setReminderMessage(error instanceof Error ? error.message : 'Unable to send reminder.');
+    } finally {
+      setReminderId(null);
+    }
   };
 
   const filtered = appointments.filter((apt) => {
@@ -210,15 +230,32 @@ export default function MyAppointmentsPage() {
                     ) : (
                       <div className="w-full flex items-center justify-between text-xs text-slate-500">
                         <span>{apt.hospital?.name}</span>
-                        <Link
-                          href={`/patient/book/${apt.doctorId}`}
-                          className="text-teal-700 font-bold hover:underline"
-                        >
-                          Book Again
-                        </Link>
+                        <div className="flex items-center gap-3">
+                          {apt.state === 'COMPLETED' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleFollowUpReminder(apt.id)}
+                              disabled={reminderId === apt.id}
+                              className="text-amber-700 font-bold hover:underline disabled:opacity-50"
+                            >
+                              {reminderId === apt.id ? 'Sending...' : 'Send Follow-up'}
+                            </button>
+                          ) : null}
+                          <Link
+                            href={`/patient/book/${apt.doctorId}`}
+                            className="text-teal-700 font-bold hover:underline"
+                          >
+                            Book Again
+                          </Link>
+                        </div>
                       </div>
                     )}
                   </div>
+                  {reminderMessage && apt.state === 'COMPLETED' ? (
+                    <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                      {reminderMessage}
+                    </div>
+                  ) : null}
                   {reschedulingId === apt.id ? (
                     <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl">
                       <label className="text-xs font-bold text-slate-700">Choose a new slot</label>

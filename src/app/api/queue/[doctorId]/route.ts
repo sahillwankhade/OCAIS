@@ -24,7 +24,7 @@ export async function GET(
     .filter((a) => a.state === 'CHECKED_IN' || a.state === 'BOOKED')
     .sort((a, b) => a.tokenNumber - b.tokenNumber);
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     doctor,
     queue,
     inConsultAppointment: inConsult || null,
@@ -35,5 +35,6 @@ export async function GET(
       slotStartTime: a.slotStartTime,
     })),
   });
+  response.headers.set('Cache-Control', 'no-store, max-age=0');
+  return response;
 }
-

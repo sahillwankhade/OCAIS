@@ -8,6 +8,16 @@ export default function ReportsPage() {
   const { hospitalId } = useDashboardRole();
 
   const [dateRange, setDateRange] = useState('TODAY');
+  const [metrics, setMetrics] = useState<{ totalAppointments: number; revenueToday: number; avgConsultDurationMinutes: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/dashboard/overview?hospitalId=${hospitalId}`)
+      .then((response) => response.json())
+      .then((data) => setMetrics(data.metrics))
+      .catch((error) => console.error(error))
+      .finally(() => setLoading(false));
+  }, [hospitalId, dateRange]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -43,7 +53,7 @@ export default function ReportsPage() {
             <span className="text-xs font-bold text-slate-500 uppercase">Total Patient Footfall</span>
             <Users className="w-5 h-5 text-teal-700" />
           </div>
-          <div className="text-3xl font-black text-slate-900 mt-3">142</div>
+          <div className="text-3xl font-black text-slate-900 mt-3">{loading ? '...' : metrics?.totalAppointments ?? 0}</div>
           <div className="text-xs text-emerald-600 flex items-center gap-1 mt-1 font-semibold">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>+12% vs last week</span>
@@ -55,7 +65,7 @@ export default function ReportsPage() {
             <span className="text-xs font-bold text-slate-500 uppercase">Total OPD Income</span>
             <IndianRupee className="w-5 h-5 text-emerald-700" />
           </div>
-          <div className="text-3xl font-black text-slate-900 mt-3">₹78,500</div>
+          <div className="text-3xl font-black text-slate-900 mt-3">₹{loading ? '...' : metrics?.revenueToday ?? 0}</div>
           <div className="text-xs text-emerald-600 flex items-center gap-1 mt-1 font-semibold">
             <TrendingUp className="w-3.5 h-3.5" />
             <span>94% collected via Online Mock / UPI</span>
@@ -67,7 +77,7 @@ export default function ReportsPage() {
             <span className="text-xs font-bold text-slate-500 uppercase">Avg Consultation Duration</span>
             <Clock className="w-5 h-5 text-purple-700" />
           </div>
-          <div className="text-3xl font-black text-slate-900 mt-3">9.8 min</div>
+          <div className="text-3xl font-black text-slate-900 mt-3">{loading ? '...' : `${metrics?.avgConsultDurationMinutes ?? 0} min`}</div>
           <div className="text-xs text-slate-500 mt-1">Based on doctor completion timestamps</div>
         </div>
       </div>
@@ -143,4 +153,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
