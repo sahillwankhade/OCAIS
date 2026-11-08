@@ -1,0 +1,13 @@
+# DEBUG LOG: One Click AIS (OCAIS)
+
+This file tracks all bugs, failures, root cause analyses, and fixes encountered during development and testing.
+
+| ID | Phase | Component | Problem / Error | Root Cause | Fix / Resolution | Status |
+|---|---|---|---|---|---|---|
+| BUG-001 | Phase 1 | Next.js Build | `EPERM: operation not permitted, mkdir '.next\static\chunks\app'` during first build run | Windows filesystem transient file-lock during parallel directory creation | Re-ran command as prescribed by terminal execution rule 7; build compiled cleanly with code 0 | Resolved |
+| BUG-002 | Phase 2 | Seed Database | `AssertionError: expected +0 to be 1` in `data-isolation.test.ts` for Patient 3 family members | `fam-3` (Vandana Joshi) was present in `003_seed_data.sql` but omitted from `mock-db.ts` seed map | Added `fam-3` mapping for `pat-3` in `mock-db.ts` | Resolved |
+| BUG-003 | Phase 5 | Next.js SSG | `useSearchParams() should be wrapped in a suspense boundary` on `/patient/search` and `/dashboard/consultation` | Next.js 15 requires client search parameter hooks to be enclosed within a Suspense boundary for static HTML prerendering | Wrapped content components in `<Suspense fallback={...}>` in both search and consultation pages | Resolved |
+| BUG-004 | Phase 6 | Patient booking E2E | Confirmation and queue pages stayed on `Loading...` after booking in development | Next.js development route bundles created separate in-memory database instances, so POST-created appointments were unavailable to subsequent GET requests | Stored the mock database on `globalThis` so all route bundles share the same state | Resolved |
+| BUG-005 | Phase 6 | Dashboard responsive layout | Doctor consultation console overflowed horizontally at 375px | The active cabin label and native select remained in one unbreakable flex row on narrow screens | Stack the label and select on mobile and constrain the select to the available width | Resolved |
+| BUG-006 | Foundation | Next.js build | Concurrent build and Playwright execution briefly reported `no direct app page entry found for /_not-found` | Both processes regenerated the shared `.next` directory concurrently | Re-ran the production build in isolation; it completed successfully | Resolved |
+| BUG-007 | Verification | PWA manifest | Browser console reported a 404 for the manifest referenced by root metadata | `public/manifest.json` was missing | Added the installable PWA manifest with app metadata and theme colors | Resolved |

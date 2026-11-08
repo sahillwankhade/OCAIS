@@ -1,0 +1,11 @@
+{
+  "name": "One Click AIS",
+  "short_name": "One Click AIS",
+  "description": "Healthcare appointments and live queue tracking for India.",
+  "start_url": "/patient",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "lang": "en-IN",
+  "icons": []
+}
