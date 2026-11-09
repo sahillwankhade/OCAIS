@@ -15,9 +15,9 @@ blob-report/
 
 # Local environment files
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
+.env.local
 
 # Local Supabase state
 .supabase/

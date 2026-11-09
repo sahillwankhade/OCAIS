@@ -52,6 +52,8 @@ The SQL migrations are ordered in `supabase/migrations/`:
 2. `002_row_level_security.sql` enables tenant and patient privacy policies.
 3. `003_seed_data.sql` adds the demo hospitals, doctors, patients, and appointments.
 4. `004_foundation_seed_completion.sql` adds demo schedules and clinic holidays.
+5. `005_atomic_booking.sql` adds transactional token allocation and prevents active slot duplicates.
+6. `006_public_slot_availability.sql` exposes booked slot times only, without patient details.
 
 With the Supabase CLI running locally:
 
@@ -60,7 +62,11 @@ supabase start
 supabase db reset
 ```
 
-The app defaults to mock services, including OTP `123456`, so no provider keys are required for local development. For real SMS OTPs, set `USE_MOCK_SERVICES=false`, configure MSG91, and restart the server. The OTP is then generated and delivered by MSG91; no OTP value is exposed by the app.
+The app defaults to mock services, including OTP `123456`, so no provider keys are required for local development. To use Supabase-backed hospital/doctor/slot reads and patient/appointment persistence, set `USE_MOCK_SERVICES=false` and configure `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`. The service-role key is server-only and must never be exposed to the browser or committed. Patient and booking API operations will fail explicitly if it is missing or invalid.
+
+Live booking is not ready for paid production use until the Razorpay checkout and server-side payment-signature verification are implemented and tested. Keep mock mode enabled for end-to-end testing; never treat an unverified payment as paid.
+
+For real SMS OTPs, configure MSG91 and restart the server. The OTP is generated and delivered by MSG91; no OTP value is exposed by the app.
 
 ### Production deployment
 
@@ -68,10 +74,15 @@ Mock OTP, mock payment, and fallback QR secrets are development-only. Before dep
 
 1. Set `NODE_ENV=production` and `USE_MOCK_SERVICES=false`.
 2. Configure a cryptographically random `HMAC_SECRET_KEY`.
-3. Configure Supabase URL, anon key, service role key, and real provider credentials (`MSG91_*`, Razorpay, Google Maps).
+3. Configure the Supabase URL, publishable key, server-only service-role key, and real provider credentials (`MSG91_*`, Razorpay, Google Maps).
 4. Apply migrations with `supabase db push` and load only non-production demo data.
 5. Deploy the Next.js app to Vercel or a Node server with HTTPS enabled.
-6. Confirm patient/staff authentication, RLS policies, payment webhooks, and audit logging in a staging environment before go-live.
+6. Confirm patient/staff authentication, API ownership checks, RLS policies, payment webhooks, and audit logging in a staging environment before go-live.
+
+The current app login uses signed application cookies rather than Supabase Auth.
+Server-side data access uses the service-role key, which bypasses RLS; the API
+ownership checks are the active authorization boundary. Supabase RLS policies
+do not independently secure these service-role requests.
 
 ### Login areas
 
