@@ -48,7 +48,7 @@ export default function BookDoctorPage() {
         // Load doctor slots & profile
         const [slotsRes, profRes] = await Promise.all([
           fetch(`/api/doctors/${doctorId}/slots?date=${selectedDate}`),
-          fetch('/api/patient/profile?patientId=pat-1'),
+          fetch('/api/patient/profile'),
         ]);
 
         const slotsData = await slotsRes.json();
@@ -98,7 +98,7 @@ export default function BookDoctorPage() {
         body: JSON.stringify({
           hospitalId: doctor?.hospitalId,
           doctorId: doctor?.id,
-          patientId: patient?.id || 'pat-1',
+          patientId: patient?.id,
           familyMemberId: isFamily ? selectedPatientId : undefined,
           slotDate: selectedDate,
           slotStartTime: selectedSlot.startTime,

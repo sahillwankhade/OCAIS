@@ -17,7 +17,8 @@
     "test:e2e:production": "cross-env E2E_PRODUCTION=true E2E_TEST_MODE=true USE_MOCK_SERVICES=true playwright test"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.48.1",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.475.0",

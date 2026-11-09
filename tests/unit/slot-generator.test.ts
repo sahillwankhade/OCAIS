@@ -50,5 +50,10 @@ describe('Slot Generation Engine', () => {
     const slots = generateDaySlots(schedule, '2026-12-25', []);
     expect(slots.length).toBe(0);
   });
-});
 
+  it('only generates slots on configured schedule weekdays', () => {
+    const weekdaySchedule = { ...schedule, daysOfWeek: [1] };
+    expect(generateDaySlots(weekdaySchedule, '2026-11-10')).toHaveLength(0);
+    expect(generateDaySlots(weekdaySchedule, '2026-11-09').length).toBeGreaterThan(0);
+  });
+});

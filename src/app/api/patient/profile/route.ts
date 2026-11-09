@@ -1,26 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
-import { forbiddenIfPatientMismatch } from '@/lib/security/access';
+import { forbiddenIfPatientMismatch, getSession } from '@/lib/security/access';
+import {
+  createSupabaseFamilyMember,
+  getSupabasePatientById,
+  isSupabaseDatabaseEnabled,
+  listSupabaseFamilyMembers,
+  patientHasHospitalAppointment,
+} from '@/lib/data/supabase-repository';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const phone = searchParams.get('phone');
-  const patientId = searchParams.get('patientId') || 'pat-1'; // Default to demo patient 1
+  const session = getSession(req);
+  if (process.env.NODE_ENV === 'production' && !session) {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  const requestedPatientId = searchParams.get('patientId');
+  let patientId: string;
+  if (session?.role === 'patient') {
+    patientId = session.subjectId;
+  } else if (session && ['doctor', 'receptionist', 'admin'].includes(session.role)
+    && session.hospitalId && requestedPatientId) {
+    patientId = requestedPatientId;
+    if (isSupabaseDatabaseEnabled()
+      && !await patientHasHospitalAppointment(patientId, session.hospitalId)) {
+      return NextResponse.json({ error: 'Patient has no appointment at this hospital' }, { status: 403 });
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+  } else {
+    patientId = requestedPatientId || 'pat-1';
+  }
   const accessError = forbiddenIfPatientMismatch(req, patientId);
   if (accessError) return accessError;
 
-  let patient = phone ? mockDb.getPatientByPhone(phone) : mockDb.getPatientById(patientId);
-
-  if (!patient) {
-    // Fallback to demo patient 1
-    patient = mockDb.getPatientById('pat-1');
-  }
+  const patient = isSupabaseDatabaseEnabled()
+    ? await getSupabasePatientById(patientId)
+    : phone ? mockDb.getPatientByPhone(phone) : mockDb.getPatientById(patientId);
 
   if (!patient) {
     return NextResponse.json({ error: 'Patient not found' }, { status: 404 });
   }
 
-  const familyMembers = mockDb.getFamilyMembers(patient.id);
+  const familyMembers = isSupabaseDatabaseEnabled()
+    ? await listSupabaseFamilyMembers(patient.id)
+    : mockDb.getFamilyMembers(patient.id);
 
   return NextResponse.json({
     patient,
@@ -37,11 +62,24 @@ export async function POST(req: NextRequest) {
       if (!patientId || !fullName || !relationship) {
         return NextResponse.json({ error: 'Missing required family details' }, { status: 400 });
       }
-      const accessError = forbiddenIfPatientMismatch(req, patientId);
+      const session = getSession(req);
+      if (process.env.NODE_ENV === 'production' && (!session || session.role !== 'patient')) {
+        return NextResponse.json({ error: 'Patient authentication required' }, { status: 401 });
+      }
+      const effectivePatientId = session?.role === 'patient' ? session.subjectId : patientId;
+      const accessError = forbiddenIfPatientMismatch(req, effectivePatientId);
       if (accessError) return accessError;
 
-      const familyMember = mockDb.createFamilyMember({
-        primaryPatientId: patientId,
+      const familyMember = isSupabaseDatabaseEnabled()
+        ? await createSupabaseFamilyMember({
+            primaryPatientId: effectivePatientId,
+            fullName,
+            relationship,
+            age: Number(age) || 20,
+            gender: gender || 'MALE',
+          })
+        : mockDb.createFamilyMember({
+        primaryPatientId: effectivePatientId,
         fullName,
         relationship,
         age: Number(age) || 20,

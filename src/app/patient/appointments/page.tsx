@@ -25,7 +25,7 @@ export default function MyAppointmentsPage() {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/appointments?patientId=pat-1');
+      const res = await fetch('/api/appointments');
       const data = await res.json();
       setAppointments(data.appointments || []);
     } catch (err) {

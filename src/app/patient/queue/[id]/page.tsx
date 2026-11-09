@@ -39,7 +39,7 @@ export default function LiveQueueTrackerPage() {
       // Handle demo shortcut `/patient/queue/demo`
       let targetId = appointmentId;
       if (targetId === 'demo') {
-        const listRes = await fetch('/api/appointments?patientId=pat-1');
+        const listRes = await fetch('/api/appointments');
         const listData = await listRes.json();
         const active = (listData.appointments || []).find(
           (a: Appointment) => a.state === 'BOOKED' || a.state === 'CHECKED_IN' || a.state === 'IN_CONSULT'

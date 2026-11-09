@@ -9,6 +9,7 @@ export interface AuthSession {
 }
 
 const SESSION_COOKIE = 'ocais_session';
+export const PENDING_PATIENT_COOKIE = 'ocais_pending_patient';
 const secret = process.env.HMAC_SECRET_KEY;
 
 function isProduction() {
@@ -24,8 +25,8 @@ export function createSessionCookie(session: AuthSession) {
   return `${value}.${sign(value)}`;
 }
 
-export function getSession(request: NextRequest): AuthSession | null {
-  const raw = request.cookies.get(SESSION_COOKIE)?.value;
+export function getSession(request: NextRequest, cookieName = SESSION_COOKIE): AuthSession | null {
+  const raw = request.cookies.get(cookieName)?.value;
   if (!raw) return null;
   const [value, signature] = raw.split('.');
   const expected = sign(value);

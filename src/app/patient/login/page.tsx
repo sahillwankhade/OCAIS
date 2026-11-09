@@ -98,9 +98,8 @@ export default function PatientLoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'VERIFY_OTP',
+          action: 'CREATE_PROFILE',
           phone,
-          otp,
           fullName,
           age,
           gender,

@@ -1,14 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockDb } from '@/lib/data';
 import { adapters } from '@/lib/adapters';
-import { createSessionCookie, SESSION_COOKIE } from '@/lib/security/access';
+import {
+  createSessionCookie,
+  getSession,
+  PENDING_PATIENT_COOKIE,
+  SESSION_COOKIE,
+} from '@/lib/security/access';
+import {
+  createSupabasePatient,
+  getSupabasePatientByPhone,
+  isSupabaseDatabaseEnabled,
+} from '@/lib/data/supabase-repository';
+
+function setPatientSession(response: NextResponse, patientId: string) {
+  response.cookies.set(SESSION_COOKIE, createSessionCookie({
+    subjectId: patientId,
+    role: 'patient',
+    expiresAt: Date.now() + 8 * 60 * 60 * 1000,
+  }), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/' });
+  response.cookies.set(PENDING_PATIENT_COOKIE, '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 0,
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { action, phone, otp, fullName, age, gender, bloodGroup } = body;
 
-    if (!phone) {
+    if (typeof phone !== 'string' || !/^\d{10}$/.test(phone)) {
       return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
     }
 
@@ -28,24 +53,66 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (action === 'CREATE_PROFILE') {
+      const pendingSession = getSession(req, PENDING_PATIENT_COOKIE);
+      if (!pendingSession || pendingSession.role !== 'patient' || pendingSession.subjectId !== `pending:${phone}`) {
+        return NextResponse.json({ error: 'Verify your phone number before creating a profile.' }, { status: 401 });
+      }
+      if (typeof fullName !== 'string' || !fullName.trim()) {
+        return NextResponse.json({ error: 'Full name is required' }, { status: 400 });
+      }
+      const parsedAge = Number(age);
+      if (!Number.isInteger(parsedAge) || parsedAge < 1 || parsedAge > 120) {
+        return NextResponse.json({ error: 'Enter a valid age' }, { status: 400 });
+      }
+
+      const patient = isSupabaseDatabaseEnabled()
+        ? await createSupabasePatient({
+            phone,
+            fullName: fullName.trim(),
+            age: parsedAge,
+            gender: gender || 'MALE',
+            bloodGroup: bloodGroup || undefined,
+          })
+        : mockDb.createPatient({
+            phone,
+            fullName: fullName.trim(),
+            age: parsedAge,
+            gender: gender || 'MALE',
+            bloodGroup: bloodGroup || undefined,
+          });
+      const response = NextResponse.json({ success: true, isNewUser: true, patient });
+      setPatientSession(response, patient.id);
+      return response;
+    }
+
     if (action === 'VERIFY_OTP') {
       const isValid = await adapters.sms.verifyOtp(phone, otp);
       if (!isValid) {
         return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 });
       }
 
-      // Check if patient exists
-      let patient = mockDb.getPatientByPhone(phone);
+      let patient = isSupabaseDatabaseEnabled()
+        ? await getSupabasePatientByPhone(phone)
+        : mockDb.getPatientByPhone(phone);
       const isNewUser = !patient;
 
       if (!patient && fullName) {
-        patient = mockDb.createPatient({
-          phone,
-          fullName,
-          age: Number(age) || 30,
-          gender: gender || 'MALE',
-          bloodGroup: bloodGroup || undefined,
-        });
+        patient = isSupabaseDatabaseEnabled()
+          ? await createSupabasePatient({
+              phone,
+              fullName,
+              age: Number(age) || 30,
+              gender: gender || 'MALE',
+              bloodGroup: bloodGroup || undefined,
+            })
+          : mockDb.createPatient({
+              phone,
+              fullName,
+              age: Number(age) || 30,
+              gender: gender || 'MALE',
+              bloodGroup: bloodGroup || undefined,
+            });
       }
 
       const response = NextResponse.json({
@@ -54,10 +121,19 @@ export async function POST(req: NextRequest) {
         patient,
       });
       if (patient) {
-        response.cookies.set(SESSION_COOKIE, createSessionCookie({
-          subjectId: patient.id,
+        setPatientSession(response, patient.id);
+      } else {
+        response.cookies.set(SESSION_COOKIE, '', {
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          path: '/',
+          maxAge: 0,
+        });
+        response.cookies.set(PENDING_PATIENT_COOKIE, createSessionCookie({
+          subjectId: `pending:${phone}`,
           role: 'patient',
-          expiresAt: Date.now() + 8 * 60 * 60 * 1000,
+          expiresAt: Date.now() + 15 * 60 * 1000,
         }), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/' });
       }
       return response;

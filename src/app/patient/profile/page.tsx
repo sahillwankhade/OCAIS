@@ -35,7 +35,7 @@ export default function PatientProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/patient/profile?patientId=pat-1');
+      const res = await fetch('/api/patient/profile');
       const data = await res.json();
       setPatient(data.patient);
       setFamilyMembers(data.familyMembers || []);
@@ -300,4 +300,3 @@ export default function PatientProfilePage() {
     </>
   );
 }
-

@@ -7,6 +7,11 @@ const seedCompletion = readFileSync(
   'supabase/migrations/004_foundation_seed_completion.sql',
   'utf8'
 );
+const bookingMigration = readFileSync('supabase/migrations/005_atomic_booking.sql', 'utf8');
+const publicAvailabilityMigration = readFileSync(
+  'supabase/migrations/006_public_slot_availability.sql',
+  'utf8'
+);
 
 const tables = [
   'hospitals',
@@ -41,5 +46,20 @@ describe('Supabase foundation migrations', () => {
 
   it('preserves patient as a valid JWT role value', () => {
     expect(rls).toContain("NULLIF(current_setting('request.jwt.claim.role', true), '');");
+  });
+
+  it('makes booking slot allocation atomic and limits the RPC to the server role', () => {
+    expect(bookingMigration).toContain('CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_active_slot');
+    expect(bookingMigration).toContain('FOR UPDATE;');
+    expect(bookingMigration).toContain("RAISE EXCEPTION 'That appointment slot is no longer available'");
+    expect(bookingMigration).toContain('TO service_role;');
+    expect(bookingMigration).toContain('FROM PUBLIC, anon, authenticated;');
+  });
+
+  it('exposes only booked time values through the public availability RPC', () => {
+    expect(publicAvailabilityMigration).toContain('RETURNS TABLE(slot_start_time TEXT)');
+    expect(publicAvailabilityMigration).toContain('SELECT DISTINCT appointments.slot_start_time');
+    expect(publicAvailabilityMigration).not.toContain('patient_id');
+    expect(publicAvailabilityMigration).toContain('TO anon, authenticated, service_role;');
   });
 });

@@ -22,7 +22,7 @@ export default function PatientHomePage() {
     async function loadData() {
       try {
         const [aptsRes, hospRes] = await Promise.all([
-          fetch('/api/appointments?patientId=pat-1'),
+          fetch('/api/appointments'),
           fetch('/api/hospitals'),
         ]);
 

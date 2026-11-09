@@ -15,6 +15,7 @@ export interface ShiftConfig {
 export interface DoctorSchedule {
   doctorId: string;
   shifts: ShiftConfig[];
+  daysOfWeek?: number[];
   holidays?: string[]; // ["2026-11-15"]
   emergencyLockedSlotIds?: string[];
 }
@@ -27,6 +28,11 @@ export function generateDaySlots(
   targetDate: string, // YYYY-MM-DD
   bookedSlotTimes: string[] = [] // ["09:00", "09:15"]
 ): TimeSlot[] {
+  const dayOfWeek = new Date(`${targetDate}T00:00:00`).getDay();
+  if (schedule.daysOfWeek?.length && !schedule.daysOfWeek.includes(dayOfWeek)) {
+    return [];
+  }
+
   // If target date is in holidays list, return no slots
   if (schedule.holidays?.includes(targetDate)) {
     return [];
@@ -73,4 +79,3 @@ export function generateDaySlots(
 
   return allSlots;
 }
-
